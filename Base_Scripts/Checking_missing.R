@@ -4,3 +4,6 @@ colmiss <- apply(rawdata, 2, percent_miss)
 
 crit_obs_miss <- subset(rawdata, rowmiss > 50)
 crit_var_miss <- rawdata[colmiss > 50]
+
+nrow(crit_obs_miss)
+length(crit_var_miss)
