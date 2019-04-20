@@ -1,11 +1,14 @@
 #Want the best model for predicting chance of admissions
 
+getwd()
 #Data-----------------
 rawdata <- read.csv("Admission_Predict.csv")
 library(textclean)
 names(rawdata) <- strip(names(rawdata), lower.case = TRUE)
+table(rawdata$sop)
 
 #Fixing Factor Variables
+library(dplyr)
 rawdata <- rawdata %>% 
   mutate(sop_g5 = sop, lor_g5 = lor) %>%
   select(-c(serialno, sop, lor))
