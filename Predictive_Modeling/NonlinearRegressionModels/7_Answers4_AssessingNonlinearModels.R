@@ -183,8 +183,6 @@ print( res_testing )
 resamp = resamples( list(svm=svmModel,knn=knnModel,nnet=nnetModel,avnnet=avNNetModel,mars=marsModel) )
 print( summary(resamp) )
 
-if( save_plots ){ postscript("../../WriteUp/Graphics/Chapter7/chap_7_prob_4_resamp_dotplot.eps", onefile=FALSE, horizontal=FALSE) }
 dotplot( resamp, metric="RMSE" )
-if( save_plots ){ dev.off() }
 
 print( summary(diff(resamp)) )
