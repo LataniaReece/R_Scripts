@@ -12,6 +12,21 @@ training <- data[inTrain,]
 testing <- data[-inTrain,]
 
 #Models---------------
+#first remove sparse and unbalanced variables first 
+preds <- training[,-1108]
+train_KeepVar<- preds[,-nearZeroVar(preds)]
+#now pca
+pca_training <- preProcess(KeepVar, method = c('center', 'scale', 'pca'), thresh = 0.95)
+new_training <- predict(pca_training, KeepVar)
+new_training <- cbind(new_training, permeability = training$permeability)
+head(new_training)
+
+#testing: 
+test_keepVars <- testing[,-nearZeroVar(preds)]
+new_testing <- predict(pca_training, test_keepVars)
+
+#variables that you should keep = KeepVar
+#preprocess them - center, scale and pca
 ctrl <- trainControl(method = 'repeatedcv',
                      number = 10, 
                      repeats = 3)
@@ -20,21 +35,21 @@ ctrl <- trainControl(method = 'repeatedcv',
 marsGrid <- expand.grid(.nprune = 2:50, .degree = 1)
 set.seed(122)
 marsModel <- train(permeability ~., 
-                    data = training,
+                    data = new_training,
                     method = 'earth',
                     tuneGrid = marsGrid,
                     trControl = ctrl)
 
 marsModel 
+saveRDS(marsModel, 'marsModel_permeability.rds')
 plot(marsModel)
 varImp(marsModel)
-saveRDS(marsModel, 'MarsModel_permeability.rds')
 
 #residuals
 mars_pred <- predict(marsModel)
-mars_res <- mars_pred - training$permeability
+mars_res <- mars_pred - new_training$permeability
 #predicted vs observed
-xyplot(training$permeability ~ mars_pred,
+xyplot(new_training$permeability ~ mars_pred,
        type = c('p', 'g'),
        xlab = 'Predicted', ylab = 'Observed',
        panel=function(...) {
@@ -50,19 +65,13 @@ xyplot(mars_res ~ mars_pred,
          panel.abline(h=0, col = 'red')
        })
 
-
+plot(new_training$permeability ~ new_training$PC1)
 #KNN
-#pca first
-grep('permeability', names(training))
-pca_training <- preProcess(training[,-101], method = c('center', 'scale', 'pca'), thresh = 0.95)
-knn_training <- predict(pca_training, training[,-101])
-knn_training <- cbind(knn_training, fat = training$fat)
-head(knn_training)
-
+#knn model
 k_grid <- expand.grid(k = 1:15)
 set.seed(100)
 knnModel <- train(permeability ~.,
-                  data = knn_training,
+                  data = new_training,
                   method = 'knn',
                   tuneGrid = k_grid,
                   trControl = ctrl)
@@ -71,9 +80,9 @@ plot(knnModel)
 
 #knn residuals
 knn_pred <- predict(knnModel)
-knn_res <- knn_pred - training$permeability
+knn_res <- knn_pred - new_training$permeability
 #predicted vs observed
-xyplot(training$permeability ~ knn_pred,
+xyplot(new_training$permeability ~ knn_pred,
        type = c('p', 'g'),
        xlab = 'Predicted', ylab = 'Observed',
        panel=function(...) {
@@ -93,19 +102,20 @@ xyplot(knn_res ~ knn_pred,
 set.seed(100)
 grid <- expand.grid(C = c(2 %o% 10^(-3:3)))
 svmLinear <- train(permeability ~., 
-                   data = training, 
+                   data = new_training, 
                    method = 'svmLinear',
                    preProc = c('center', 'scale'),
                    tuneGrid = grid,
                    trControl = ctrl)
 svmLinear
+plot(svmLinear)
 saveRDS(svmLinear, "svmLinear_permeability.rds")
-
+svmLinear <- readRDS('svmLinear_permeability.rds')
 #linsvm residuals--------------------
 lin_pred <- predict(svmLinear)
-lin_res <- lin_pred - training$permeability
+lin_res <- lin_pred - new_training$permeability
 #predicted vs observed
-xyplot(training$permeability ~ lin_pred,
+xyplot(new_training$permeability ~ lin_pred,
        type = c('p', 'g'),
        xlab = 'Predicted', ylab = 'Observed',
        panel=function(...) {
@@ -120,16 +130,13 @@ xyplot(lin_res ~ lin_pred,
          panel.xyplot(...)
          panel.abline(h=0, col = 'red')
        })
-
-plot(svmLinear)
-
 #RadialSVM
 grid_radial <- expand.grid(sigma = seq(0,1,0.1),
                            C = c(0.01, 0.05, 0.1, 0.25, 0.5, 0.75,
                                  1, 1.5, 2,5))
 set.seed(100)
-svmRadial <- train(permeability) ~., 
-                   data = training, 
+svmRadial <- train(permeability ~., 
+                   data = new_training, 
                    method = 'svmRadial',
                    preProc = c('center', 'scale'),
                    tuneGrid = grid_radial,
@@ -137,12 +144,12 @@ svmRadial <- train(permeability) ~.,
 svmRadial
 plot(svmRadial)
 saveRDS(svmRadial, "svmRadial_permeability.rds")
-
+svmRadial <- readRDS('svmRadial_permeability.rds')
 #radialsvm residuals-------------------------------
 rad_pred <- predict(svmRadial)
-rad_res <- rad_pred - training$permeability
+rad_res <- rad_pred - new_training$permeability
 #predicted vs observed
-xyplot(training$permeability ~ rad_pred,
+xyplot(new_training$permeability ~ rad_pred,
        type = c('p', 'g'),
        xlab = 'Predicted', ylab = 'Observed',
        panel=function(...) {
@@ -159,26 +166,26 @@ xyplot(rad_res ~ rad_pred,
        })
 
 #Neural Networks 
-
 #nnetGrid <- expand.grid(.decay = c(0, 0.01, .1),
 #                       .size = c(1:10),
 #                      .bag = FALSE)
 set.seed(100)
 nnetModel <- train(permeability ~.,
-                   data = training,
+                   data = new_training,
                    method = 'avNNet',
                    preProcess = c('center', 'scale'),
                    linout = TRUE,
                    trControl = ctrl,
                    trace = FALSE)
 saveRDS(nnetModel, "nnet_permeability.rds")
+nnetModel <- readRDS('nnet_permeability.rds')
 nnetModel
 
 #nnet residuals-------------------------------
 nnet_pred <- predict(nnetModel)
-nnet_res <- nnet_pred - training$permeability
+nnet_res <- nnet_pred - new_training$permeability
 #predicted vs observed
-xyplot(training$permeability
+xyplot(new_training$permeability
        ~ nnet_pred,
        type = c('p', 'g'),
        xlab = 'Predicted', ylab = 'Observed',
@@ -203,3 +210,7 @@ models <- list(MARS = marsModel,
                KNN = knnModel)
 resamps <- resamples(models)
 summary(resamps)
+
+#KNN seems to be the best model in this case...
+preds <- predict(knnModel, new_testing)
+postResample(preds, new_testing$permeability)
