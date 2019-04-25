@@ -6,23 +6,17 @@ library(AppliedPredictiveModeling)
 set.seed(0)
 
 data(permeability)
-dim(permeability)
-dim(fingerprints)
+data <- data.frame(fingerprints, permeability)
 # Part (b):
 # 
 zero_cols = nearZeroVar( fingerprints )
 print( sprintf("Found %d zero variance columns from %d",length(zero_cols), dim(fingerprints)[2]))
-fingerprints = fingerprints[,-zero_cols] # drop these zero variance columns 
+data = data[,-zero_cols] # drop these zero variance columns 
 
 # Split this data into training and testing sets:
 #
-training = createDataPartition( permeability, p=0.8 )
-
-fingerprints_training = fingerprints[training$Resample1,]
-permeability_training = permeability[training$Resample1]
-
-fingerprints_testing = fingerprints[-training$Resample1,]
-permeability_testing = permeability[-training$Resample1]
+set.seed(0)
+inTrain = createDataPartition(data$permeability, p=0.8 )
 
 # Part (c): Build a PLSR model on this data: 
 #

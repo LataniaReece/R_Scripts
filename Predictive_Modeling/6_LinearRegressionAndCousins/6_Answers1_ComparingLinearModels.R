@@ -2,9 +2,10 @@
 
 
 library(caret) 
-
 set.seed(0)
 data(tecator) 
+data <- data.frame(absorp, y = endpoints[,2])
+
 #absorp = predictors 
 #endpoints = columns of different responses
 
@@ -28,7 +29,7 @@ set.seed(0)
 lm_model = train( absorp, fat, 
                   method="lm", 
                   preProcess=c("center","scale"),
-                  trControl=trainControl(method="repeatedcv",repeats=5) )
+                  trControl=trainControl(method="repeatedcv",repeats=5))
 
 # For rlm we cannot have a singular predictor covariance matrix thus we preprocess with PCA:
 # 
