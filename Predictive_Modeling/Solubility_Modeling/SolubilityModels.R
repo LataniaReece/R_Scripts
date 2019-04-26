@@ -1,7 +1,56 @@
+#Data Description P 102 (117)
+#Predicting solubility using chemical structures 
+#Data consists of: 
+  #1267 total compounds 
+  #208 binary 'fingerprints' that indicate the presenc eor absence of a particular chemical structure 
+  #16 Count descriptors such as number of bonds or number of bromine atoms 
+  #4 Continous descriptors such as molecular weight or surface area
+#data already consists of transformed predictors, will screen both sets of predictors
+  #They used Box Cox transformation since continuous data was skewed 
+#outcome of data measured on log10 scale and ranged from -11 to 1.6 with an average log solubility of -2.7
+
+#Train/Test Split - random sampling, 951 train 316 test
+
+
 library(caret)
 library(AppliedPredictiveModeling)
 set.seed(0)
 data(solubility)
+names(solTrainXtrans)
+
+
+#Screening Predictors - starting with 228 predictors----------------
+#SolTrainX
+#1st. since fingerprint predictors are categorical and binary, preprocessing won't do much
+#selecting continuous predictors 
+library(dplyr)
+continuous_predictors <- solTrainX %>%
+  select(-(starts_with('F')))
+
+#Correlations of predictors 
+correlations <- cor(continuous_predictors)
+library(corrplot)
+corrplot(correlations, order = 'hclust')
+
+#PCA analysis can also tell you about correlations. Can the data be summed in smaller dimensions?
+pca <- prcomp(continuous_predictors, 
+              center = TRUE, scale = TRUE)
+pcaVar <- round(pca$sdev^2, 4)
+pcaVar_percent <- round(pcaVar/sum(pcaVar)* 100, 1)
+pcaVar_percent_cum <- cumsum(pcaVar_percent)
+
+  #Scree Plot 
+plot(1:10, pcaVar_percent[1:10], 
+     type = 'b',
+     main = 'Scree Plot',
+     xlab = 'Components',
+     ylab = 'Variance')
+axis(side = 1, at = (1:10))
+axis(side = 2, at = seq(0, 100, by = 5))
+
+?plot
+
+?plot
 
 
 ctrl <- trainControl(method = 'repeatedcv',
