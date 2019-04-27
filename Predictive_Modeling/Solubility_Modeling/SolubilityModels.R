@@ -10,14 +10,10 @@
 #outcome of data measured on log10 scale and ranged from -11 to 1.6 with an average log solubility of -2.7
 
 #Train/Test Split - random sampling, 951 train 316 test
-
-
 library(caret)
 library(AppliedPredictiveModeling)
 set.seed(0)
 data(solubility)
-names(solTrainXtrans)
-
 
 #Screening Predictors - starting with 228 predictors----------------
 #SolTrainX
@@ -88,14 +84,14 @@ lmModel <- train(x = solTrainXtrans,
                    y = solTrainY,
                    method = 'lm',
                    trControl = ctrl)
-print('Linear Model Finished')
+# print('Linear Model Finished')
 
 set.seed(669)
 plsModel <- train(x = solTrainXtrans,
                   y = solTrainY,
                   method = 'pls',
                   preProc = c('center', 'scale'),
-                  tuneLength = 15,
+                  tuneLength = 30,
                   trControl = ctrl)
 
 print('plsModel Finished')
@@ -114,13 +110,17 @@ enetModel <- train(x = solTrainXtrans,
 saveRDS(enetModel, 'enet_solubility.rds')
 print('enetModel Finished')
 
+
+knnGrid <- expand.grid(k = 1:30)
 set.seed(669)
-knnModel = train(x = solTrainXtrans, 
+
+knnModel = train(x = solTrainXtrans,
                  y = solTrainY,
                  method="knn",
                  preProc= c('center', 'scale'),
-                 tuneLength=10,
+                 tuneGrid = knnGrid,
                  trControl = ctrl)
+saveRDS(knnModel, 'KNN_solubility.rds')
 
 set.seed(669)
 marsModel <- train(x = solTrainXtrans,
@@ -132,6 +132,9 @@ marsModel <- train(x = solTrainXtrans,
 saveRDS(marsModel, 'mars_solubility.rds')
 print('Mars Model Finished')
 
+
+svmGrid <- expand.grid(sigma = c(0.01, .1, 1),
+                       C = c(100:200))
 set.seed(669)
 svmRModel <- train(x = solTrainXtrans,
                    y = solTrainY,
@@ -166,10 +169,13 @@ rpartModel <- train(x = solTrainXtrans,
                     tuneLength = 30,
                     trControl = ctrl)
 
+
 saveRDS(rpartModel, 'rpart_solubility.rds')
 print('rpart model Finished')
 
 set.seed(669)
+
+
 ctreeModel <- train(x = solTrainXtrans,
                     y = solTrainY,
                     method = 'ctree',
@@ -177,6 +183,15 @@ ctreeModel <- train(x = solTrainXtrans,
                     trControl = ctrl)
 saveRDS(ctreeModel, 'ctree_solubility.rds')
 print('ctree model Finished')
+
+set.seed(669)
+ctreeModel2 <- train(x = solTrainXtrans,
+                    y = solTrainY,
+                    method = 'ctree',
+                    tuneGrid = expand.grid(mincriterion = seq(0, 0.1, by = 0.005)),
+                    trControl = ctrl)
+saveRDS(ctreeModel2, 'ctree2_solubility.rds')
+
 
 
 
@@ -219,7 +234,7 @@ cubistGrid <- expand.grid(committees = c(1,5,10,50,75,100),
                           neighbors = c(0,1,3,5,7,9))
 set.seed(669)
 cbModel <- train(x = solTrainXtrans,
-                 y = solTrainY, 
+                 y = solTrainY,
                  method = 'cubist',
                  tuneGrid = cubistGrid,
                  trControl = ctrl)
@@ -236,30 +251,20 @@ saveRDS(mtModel, 'M5_solubility.rds')
 print('M5 model Finished')
 
 #Loading RDS Modelsc
-choose.dir()
-enetModel <- readRDS('C:\\Users\\reece\\Desktop\\R_Scripts\\Predictive_Modeling\\Solubility_Modeling\\enet_solubility.rds')
-marsModel <- readRDS('C:\\Users\\reece\\Desktop\\R_Scripts\\Predictive_Modeling\\Solubility_Modeling\\mars_solubility.rds')
-svmRModel <- readRDS('C:\\Users\\reece\\Desktop\\R_Scripts\\Predictive_Modeling\\Solubility_Modeling\\svm_solubility.rds')
-nnetModel <- readRDS('C:\\Users\\reece\\Desktop\\R_Scripts\\Predictive_Modeling\\Solubility_Modeling\\nnet_solubility.rds')
-rpartModel <- readRDS('C:\\Users\\reece\\Desktop\\R_Scripts\\Predictive_Modeling\\Solubility_Modeling\\rpart_solubility.rds')
-ctreeModel <- readRDS('C:\\Users\\reece\\Desktop\\R_Scripts\\Predictive_Modeling\\Solubility_Modeling\\ctree_solubility.rds')
-mtModel <- readRDS('C:\\Users\\reece\\Desktop\\R_Scripts\\Predictive_Modeling\\Solubility_Modeling\\M5_solubility.rds')
-treebagModel <- readRDS('C:\\Users\\reece\\Desktop\\R_Scripts\\Predictive_Modeling\\Solubility_Modeling\\treebag_solubility.rds')
-rfModel <- readRDS('C:\\Users\\reece\\Desktop\\R_Scripts\\Predictive_Modeling\\Solubility_Modeling\\rf_solubility.rds')
-gbmModel <- readRDS('C:\\Users\\reece\\Desktop\\R_Scripts\\Predictive_Modeling\\Solubility_Modeling\\gbm_solubility.rds')
-cbModel <- readRDS('C:\\Users\\reece\\Desktop\\R_Scripts\\Predictive_Modeling\\Solubility_Modeling\\cubist_solubility.rds')
+enetModel <- readRDS('C:\\Users\\reece\\Desktop\\R_Scripts\\Models_rds\\enet_solubility.rds')
+marsModel <- readRDS('C:\\Users\\reece\\Desktop\\R_Scripts\\Models_rds\\mars_solubility.rds')
+svmRModel <- readRDS('C:\\Users\\reece\\Desktop\\R_Scripts\\Models_rds\\svm_solubility.rds')
+nnetModel <- readRDS('C:\\Users\\reece\\Desktop\\R_Scripts\\Models_rds\\nnet_solubility.rds')
+rpartModel <- readRDS('C:\\Users\\reece\\Desktop\\R_Scripts\\Models_rds\\rpart_solubility.rds')
+ctreeModel <- readRDS('C:\\Users\\reece\\Desktop\\R_Scripts\\Models_rds\\ctree_solubility.rds')
+mtModel <- readRDS('C:\\Users\\reece\\Desktop\\R_Scripts\\Models_rds\\M5_solubility.rds')
+treebagModel <- readRDS('C:\\Users\\reece\\Desktop\\R_Scripts\\Models_rds\\treebag_solubility.rds')
+rfModel <- readRDS('C:\\Users\\reece\\Desktop\\R_Scripts\\Models_rds\\rf_solubility.rds')
+gbmModel <- readRDS('C:\\Users\\reece\\Desktop\\R_Scripts\\Models_rds\\gbm_solubility.rds')
+cbModel <- readRDS('C:\\Users\\reece\\Desktop\\R_Scripts\\Models_rds\\cubist_solubility.rds')
+knnModel <- readRDS("C:\\Users\\reece\\Desktop\\R_Scripts\\Models_rds\\KNN_solubility.rds")
 
-#Resamples (remember quick models lmModel, plsModel, knnModel)
-allResamples <- resamples(list('Linear Reg' = lmModel,
-                               'PLS' = plsModel,
-                               'Elastic Net' = enetModel,
-                               'KNN' = knnModel,
-                               'MARS' = marsModel,
-                               'SVM' = svmRModel,
-                               'Neural Networks' = nnetModel,
-                               'CART' = rpartModel,
-                               'Cond Inf Tree' = ctreeModel,
-                               'Bagged Tree' = treebagModel,
-                               'Boosted Tree' = gbmModel, 
-                               'Random Forest' = rfModel,
-                               "Cubist" = cbModel))
+
+
+
+
