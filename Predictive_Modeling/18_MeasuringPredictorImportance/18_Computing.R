@@ -54,7 +54,7 @@ getTstats <- function(x,y)
   }
 tVals <- apply(solTrainXtrans[, fpCols], 2, getTstats,
                y = solTrainY)
-# switcht he dimensions 
+# switch the dimensions
 tVals <- t(tVals)
 head(tVals)
 
@@ -140,6 +140,24 @@ fisher.test(admitRankTable)
 #Can also do a  chi square test 
 chisq.test(greAdmitTable)
 chisq.test(admitRankTable)
+
+
+#GET ANOVA STATS
+getfStats <- function(x,y)
+{
+  aovTest <- aov(y ~ x)
+  sum_test = unlist(summary(res.aov))
+  out <- c(fStat = sum_test["Pr(>F)1"], p = sum_test["F value1"])
+  out
+}
+
+fVals <- apply(data[,-8], 2, getfStats,
+               x = data$oilType)
+
+# switch the dimensions 
+fVals <- t(fVals)
+head(fVals)
+
 
 
 
